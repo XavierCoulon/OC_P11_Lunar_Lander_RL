@@ -1,0 +1,16 @@
+[project]
+name = "oc-p11-entrainement-agent-rl"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "box2d>=2.3.10",
+    "gymnasium>=1.2.3",
+    "moviepy>=2.2.1",
+    "numpy>=2.4.2",
+    "pygame>=2.6.1",
+    "shimmy>=2.0.0",
+    "stable-baselines3>=2.7.1",
+    "tensorboard>=2.20.0",
+]
