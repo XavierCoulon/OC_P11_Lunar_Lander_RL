@@ -9,5 +9,8 @@ wheels/
 # Data files
 /data/
 
+# Models (large binaries)
+/models/
+
 # Virtual environments
 .venv
