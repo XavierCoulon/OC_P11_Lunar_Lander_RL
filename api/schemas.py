@@ -39,3 +39,32 @@ class PredictResponse(BaseModel):
 
     class Config:
         json_schema_extra = {"example": {"action": 3}}
+
+
+class GameSessionRequest(BaseModel):
+    """Request pour logger une session de jeu"""
+
+    score: float = Field(description="Score final de la session")
+    steps: int = Field(ge=0, description="Nombre de steps joués")
+    actions: list[int] = Field(description="Liste des actions prises")
+    success: bool = Field(description="Succès (atterrissage réussi)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "score": 150.5,
+                "steps": 500,
+                "actions": [0, 3, 3, 2, 1],
+                "success": True,
+            }
+        }
+
+
+class GameSessionResponse(BaseModel):
+    """Response après logging d'une session"""
+
+    status: str = Field(description="Statut du logging")
+    session_id: str = Field(description="ID unique de la session")
+
+    class Config:
+        json_schema_extra = {"example": {"status": "logged", "session_id": "game_1234.5"}}

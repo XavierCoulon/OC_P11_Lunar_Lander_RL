@@ -25,6 +25,8 @@ if "steps" not in st.session_state:
     st.session_state.steps = 0
 if "game_done" not in st.session_state:
     st.session_state.game_done = False
+if "actions_taken" not in st.session_state:
+    st.session_state.actions_taken = []  # type: ignore
 
 
 # Vérifier connexion API
@@ -56,6 +58,7 @@ with col1:
 
         st.session_state.score = 0
         st.session_state.steps = 0
+        st.session_state.actions_taken = []
         st.session_state.game_active = True
         st.session_state.game_done = False
 
@@ -112,6 +115,9 @@ if st.session_state.game_active and st.session_state.env_local is not None:
                 st.error("❌ Environnement perdu")
                 break
 
+            # Tracker l'action
+            st.session_state.actions_taken.append(action)
+
             obs, reward, terminated, truncated, info = st.session_state.env_local.step(
                 action
             )
@@ -147,9 +153,34 @@ if st.session_state.game_active and st.session_state.env_local is not None:
                 if st.session_state.env_local is not None:
                     st.session_state.env_local.close()
                     st.session_state.env_local = None
-                placeholder_status.success(
-                    f"🎯 Jeu terminé! Score final: {st.session_state.score:.1f}"
-                )
+
+                # Déterminer le succès (atterrissage réussi: score > 0)
+                success = st.session_state.score > 0
+
+                # Logger la session
+                try:
+                    log_response = requests.post(
+                        f"{API_URL}/log-game",
+                        json={
+                            "score": st.session_state.score,
+                            "steps": st.session_state.steps,
+                            "actions": st.session_state.actions_taken,
+                            "success": success,
+                        },
+                        timeout=5,
+                    )
+                    if log_response.status_code == 200:
+                        placeholder_status.success(
+                            f"🎯 Jeu terminé! Score final: {st.session_state.score:.1f}\n✅ Session loggée"
+                        )
+                    else:
+                        placeholder_status.success(
+                            f"🎯 Jeu terminé! Score final: {st.session_state.score:.1f}"
+                        )
+                except Exception as e:
+                    placeholder_status.success(
+                        f"🎯 Jeu terminé! Score final: {st.session_state.score:.1f}"
+                    )
 
         except Exception as e:
             st.error(f"❌ Erreur: {str(e)}")
