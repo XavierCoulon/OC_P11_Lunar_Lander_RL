@@ -6,12 +6,19 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "box2d>=2.3.10",
+    "fastapi>=0.135.1",
     "gymnasium>=1.2.3",
+    "make>=0.1.6.post2",
     "moviepy>=2.2.1",
     "numpy>=2.4.2",
+    "pillow>=11.3.0",
+    "pydantic>=2.12.5",
     "pygame>=2.6.1",
+    "requests>=2.32.5",
     "setuptools<70",
     "shimmy>=2.0.0",
     "stable-baselines3>=2.7.1",
+    "streamlit>=1.55.0",
     "tensorboard>=2.20.0",
+    "uvicorn>=0.41.0",
 ]
