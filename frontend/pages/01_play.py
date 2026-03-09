@@ -2,8 +2,10 @@ import streamlit as st
 import requests
 import numpy as np
 import gymnasium as gym
+from gymnasium.wrappers import RecordVideo
 import time
 from typing import Any
+from pathlib import Path
 
 st.set_page_config(page_title="Play - LunarLander Agent", page_icon="🎮", layout="wide")
 
@@ -27,6 +29,8 @@ if "game_done" not in st.session_state:
     st.session_state.game_done = False
 if "actions_taken" not in st.session_state:
     st.session_state.actions_taken = []  # type: ignore
+if "record_video" not in st.session_state:
+    st.session_state.record_video = False
 
 
 # Vérifier connexion API
@@ -47,13 +51,30 @@ if not check_api():
 
 st.success("✅ Connecté à l'API")
 
+# Options d'enregistrement
+col_options = st.columns([1, 2])
+with col_options[0]:
+    st.session_state.record_video = st.checkbox("📹 Enregistrer vidéo", value=False)
+with col_options[1]:
+    if st.session_state.record_video:
+        st.info("La vidéo sera sauvegardée dans `data/videos/`")
+
 # Boutons de contrôle
 col1, col2 = st.columns([1, 1])
 
 with col1:
     if st.button("▶️ Commencer", key="start_btn"):
         # Créer nouvel environnement
-        st.session_state.env_local = gym.make("LunarLander-v3", render_mode="rgb_array")
+        env = gym.make("LunarLander-v3", render_mode="rgb_array")
+
+        # Wrapper RecordVideo si demandé
+        if st.session_state.record_video:
+            video_folder = Path("data/videos")
+            video_folder.mkdir(parents=True, exist_ok=True)
+            video_id = f"lunar_lander_{int(time.time())}"
+            env = RecordVideo(env, video_folder=str(video_folder), name_prefix=video_id)
+
+        st.session_state.env_local = env
         st.session_state.current_obs, _ = st.session_state.env_local.reset()
 
         st.session_state.score = 0

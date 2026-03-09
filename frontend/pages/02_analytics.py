@@ -71,8 +71,68 @@ with col4:
 
 st.markdown("---")
 
-# Graphique score au fil du temps
-st.markdown("### 📉 Score au fil du temps")
+# Tableau détaillé des sessions avec vidéos
+st.markdown("### 📋 Historique des sessions")
+
+# Récupérer les fichiers vidéo disponibles
+videos_folder = Path("data/videos")
+video_files_dict = {}
+if videos_folder.exists():
+    for vf in videos_folder.glob("*.mp4"):
+        # Associer la vidéo à la session par timestamp approximatif
+        video_files_dict[vf.name] = vf
+
+# Afficher chaque session
+cols = st.columns([1, 2, 1, 1, 1, 1.2])
+cols[0].write("**Partie**")
+cols[1].write("**Date/Heure**")
+cols[2].write("**Score**")
+cols[3].write("**Steps**")
+cols[4].write("**Succès**")
+cols[5].write("**Vidéo**")
+
+for idx, row in df.iterrows():
+    cols = st.columns([1, 2, 1, 1, 1, 1.2])
+
+    with cols[0]:
+        st.write(f"#{int(row['partie'])}")
+
+    with cols[1]:
+        st.write(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+
+    with cols[2]:
+        st.write(f"{row['score']:.1f}")
+
+    with cols[3]:
+        st.write(f"{int(row['steps'])}")
+
+    with cols[4]:
+        st.write("✅ Succès" if row["success"] else "❌ Crash")
+
+    with cols[5]:
+        # Chercher une vidéo pour cette session
+        video_found = False
+        for video_file in video_files_dict.values():
+            # Vérifier si le timestamp de la vidéo est proche
+            video_time = datetime.fromtimestamp(video_file.stat().st_mtime)
+            if (
+                abs((video_time - row["timestamp"]).total_seconds()) < 60
+            ):  # Moins d'1 min d'écart
+                with open(video_file, "rb") as f:
+                    st.download_button(
+                        label="📹 Télécharger",
+                        data=f.read(),
+                        file_name=video_file.name,
+                        mime="video/mp4",
+                        key=f"download_{idx}_{video_file.name}",
+                    )
+                video_found = True
+                break
+
+        if not video_found:
+            st.write("-")
+
+st.markdown("---")
 fig_score = px.line(
     df,
     x="partie",
@@ -87,7 +147,7 @@ fig_score.add_hline(
     line_color="red",
     annotation_text=f"Moyenne: {df['score'].mean():.1f}",
 )
-st.plotly_chart(fig_score, use_container_width=True)
+st.plotly_chart(fig_score, width="stretch")
 
 # Deux colonnes pour les graphiques
 col1, col2 = st.columns(2)
@@ -102,7 +162,7 @@ with col1:
         title="Histogramme des scores",
         labels={"score": "Score", "count": "Nombre de parties"},
     )
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.plotly_chart(fig_hist, width="stretch")
 
 with col2:
     # Réussite vs Échec
@@ -114,7 +174,7 @@ with col2:
         title="Répartition réussite/crash",
         color_discrete_map={"Atterrissage réussi": "#00ff00", "Crash": "#ff0000"},
     )
-    st.plotly_chart(fig_success, use_container_width=True)
+    st.plotly_chart(fig_success, width="stretch")
 
 st.markdown("---")
 
@@ -138,15 +198,4 @@ if action_counts:
         title="Fréquence des actions",
         labels={"x": "Action", "y": "Nombre d'appels"},
     )
-    st.plotly_chart(fig_actions, use_container_width=True)
-
-st.markdown("---")
-
-# Tableau détaillé des sessions
-st.markdown("### 📋 Historique des sessions")
-display_df = df[["partie", "timestamp", "score", "steps", "success"]].copy()
-display_df["timestamp"] = display_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
-display_df["success"] = display_df["success"].apply(
-    lambda x: "✅ Succès" if x else "❌ Crash"
-)
-st.dataframe(display_df, use_container_width=True)
+    st.plotly_chart(fig_actions, width="stretch")
